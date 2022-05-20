@@ -12,21 +12,40 @@ interface Form extends HTMLFormElement {
 function App() {
   const [items, setItems] = useState<Item[]>([]);
   const [isLoading, toggleLoading] = useState<boolean>(true);
+  const [isSaving, setSaving] = useState<boolean>(false);
 
   function handleToggle(id: Item["id"]) {
-    // Should implement
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              completed: !item.completed,
+            }
+          : item,
+      ),
+    );
   }
 
   function handleAdd(event: React.ChangeEvent<Form>) {
     event.preventDefault();
 
-    setItems((items) =>
-      items.concat({
-        id: +new Date(),
-        completed: false,
-        text: event.target.text.value,
-      }),
-    );
+    const text = event.target.text.value;
+
+    if (!text.trim() || isSaving) return;
+
+    setSaving(true);
+
+    setTimeout(() => {
+      setItems((items) =>
+        items.concat({
+          id: +new Date(),
+          completed: false,
+          text,
+        }),
+      );
+      setSaving(false);
+    }, 1000);
 
     event.target.text.value = "";
   }
@@ -48,8 +67,8 @@ function App() {
     <main className={styles.main}>
       <h1>Supermarket list</h1>
       <form onSubmit={handleAdd}>
-        <input name="text" type="text" />
-        <button>Add</button>
+        <input autoFocus name="text" type="text" />
+        <button disabled={isSaving}>{isSaving ? "Saving" : "Add"}</button>
       </form>
       <ul>
         {items?.map((item) => (
